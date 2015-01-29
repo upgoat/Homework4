@@ -15,6 +15,7 @@ using Windows.UI.Xaml.Navigation;
 using VisualizationTools;
 using libfilter;
 using libsound;
+using FFTW;
 
 namespace Homework4
 {
