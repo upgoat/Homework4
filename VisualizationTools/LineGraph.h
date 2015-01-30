@@ -77,7 +77,6 @@ namespace VisualizationTools
 		Microsoft::WRL::ComPtr<ID3D11Device>                m_d3dDevice;
 		Microsoft::WRL::ComPtr<ID3D11DeviceContext>         m_d3dContext;
 		Microsoft::WRL::ComPtr<ID3D11RenderTargetView>      m_renderTargetView;
-		Microsoft::WRL::ComPtr<ID3D11DepthStencilView>      m_depthStencilView;
 		Microsoft::WRL::ComPtr<ID3D11VertexShader>          m_vertexShader;
 		Microsoft::WRL::ComPtr<ID3D11PixelShader>           m_pixelShader;
 		Microsoft::WRL::ComPtr<ID3D11InputLayout>           m_inputLayout;

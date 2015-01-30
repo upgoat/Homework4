@@ -160,6 +160,7 @@ void LineGraph::CreateDeviceResources()
 
 	// Initialize constant buffers
 	makeConstantBuffers();
+
 }
 
 void LineGraph::lockBuffers() {
@@ -235,18 +236,19 @@ Platform::Array<float>^ LineGraph::getArray() {
 
 void LineGraph::updateVertexBuffer() {
 	lockBuffers();
-	if (vbDirty) {
-		if (vbSizeDirty) {
-			D3D11_SUBRESOURCE_DATA vertexBufferData = { 0 };
-			vertexBufferData.pSysMem = lineVerts;
-			vertexBufferData.SysMemPitch = 0;
-			vertexBufferData.SysMemSlicePitch = 0;
+	if (vbSizeDirty) {
+		D3D11_SUBRESOURCE_DATA vertexBufferData = { 0 };
+		vertexBufferData.pSysMem = lineVerts;
+		vertexBufferData.SysMemPitch = 0;
+		vertexBufferData.SysMemSlicePitch = 0;
 
-			CD3D11_BUFFER_DESC vertexBufferDesc(sizeof(VertexPositionColor)*N, D3D11_BIND_VERTEX_BUFFER, D3D11_USAGE_DYNAMIC, D3D11_CPU_ACCESS_WRITE);
-			HRESULT hr = m_d3dDevice->CreateBuffer(&vertexBufferDesc, &vertexBufferData, &m_vertexBuffer);
-			ThrowIfFailed(hr);
-			vbSizeDirty = false;
-		}
+		CD3D11_BUFFER_DESC vertexBufferDesc(sizeof(VertexPositionColor)*N, D3D11_BIND_VERTEX_BUFFER, D3D11_USAGE_DYNAMIC, D3D11_CPU_ACCESS_WRITE);
+		HRESULT hr = m_d3dDevice->CreateBuffer(&vertexBufferDesc, &vertexBufferData, &m_vertexBuffer);
+		ThrowIfFailed(hr);
+		vbSizeDirty = false;
+	}
+
+	if (vbDirty && m_vertexBuffer) {
 		D3D11_MAPPED_SUBRESOURCE mappedResource;
 		m_d3dContext->Map(m_vertexBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
 		memcpy(mappedResource.pData, lineVerts, sizeof(VertexPositionColor)*N);
@@ -291,13 +293,6 @@ void LineGraph::Render(Platform::Object^ sender, Platform::Object^ e)
 		black
 		);
 
-	m_d3dContext->ClearDepthStencilView(
-		m_depthStencilView.Get(),
-		D3D11_CLEAR_DEPTH,
-		1.0f,
-		0
-		);
-
 	if (constantBufferDirty) {
 		// Throw the constant matrices up onto the GPU only if we need to
 		lockBuffers();
@@ -306,12 +301,17 @@ void LineGraph::Render(Platform::Object^ sender, Platform::Object^ e)
 		unlockBuffers();
 	}
 
+	// Only do the rest if we actually have something to draw!
 	this->updateVertexBuffer();
+	if (!m_vertexBuffer) {
+		EndDraw();
+		return;
+	}
 
 	m_d3dContext->OMSetRenderTargets(
 		1,
 		m_renderTargetView.GetAddressOf(),
-		m_depthStencilView.Get()
+		nullptr
 		);
 
 	UINT stride = sizeof(VertexPositionColor);
@@ -392,44 +392,6 @@ void LineGraph::BeginDraw()
 		viewport.MinDepth = D3D11_MIN_DEPTH;
 		viewport.MaxDepth = D3D11_MAX_DEPTH;
 		m_d3dContext->RSSetViewports(1, &viewport);
-
-		// I don't think we need this....
-		/*
-		// Get the surface description in order to determine its size. The size of the depth/stencil buffer and the RenderTargetView must match, so the 
-		// depth/stencil buffer must be the same size as the surface. Since the whole surface returned by BeginDraw can potentially be much larger than 
-		// the actual update rect area passed into BeginDraw, it may be preferable for some apps to include an intermediate step which instead creates a 
-		// separate smaller D3D texture and renders into it before calling BeginDraw, then simply copies that texture into the surface returned by BeginDraw. 
-		// This would prevent needing to create a depth/stencil buffer which is potentially much larger than required, thereby saving memory at the cost of 
-		// additional overhead due to the copy operation.
-		DXGI_SURFACE_DESC surfaceDesc;
-		surface->GetDesc(&surfaceDesc);
-
-		// Create depth/stencil buffer descriptor.
-		CD3D11_TEXTURE2D_DESC depthStencilDesc(
-			DXGI_FORMAT_D24_UNORM_S8_UINT,
-			surfaceDesc.Width,
-			surfaceDesc.Height,
-			1,
-			1,
-			D3D11_BIND_DEPTH_STENCIL
-			);
-
-		// Allocate a 2-D surface as the depth/stencil buffer.
-		ComPtr<ID3D11Texture2D> depthStencil;
-		ThrowIfFailed(
-			m_d3dDevice->CreateTexture2D(&depthStencilDesc, nullptr, &depthStencil)
-			);
-
-		// Create depth/stencil view based on depth/stencil buffer.
-		const CD3D11_DEPTH_STENCIL_VIEW_DESC depthStencilViewDesc = CD3D11_DEPTH_STENCIL_VIEW_DESC(D3D11_DSV_DIMENSION_TEXTURE2D);
-		ThrowIfFailed(
-			m_d3dDevice->CreateDepthStencilView(
-			depthStencil.Get(),
-			&depthStencilViewDesc,
-			&m_depthStencilView
-			)
-			);
-		*/
 	}
 	else if (beginDrawHR == DXGI_ERROR_DEVICE_REMOVED || beginDrawHR == DXGI_ERROR_DEVICE_RESET)
 	{

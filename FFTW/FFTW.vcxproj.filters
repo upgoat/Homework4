@@ -7,9 +7,9 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="CSharpFFTW.cpp" />
+    <ClInclude Include="FFTWrapper.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="CSharpFFTW.h" />
+    <ClCompile Include="FFTWrapper.cpp" />
   </ItemGroup>
 </Project>

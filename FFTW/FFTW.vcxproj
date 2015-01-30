@@ -19,10 +19,10 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="CSharpFFTW.cpp" />
+    <ClCompile Include="FFTWrapper.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="CSharpFFTW.h" />
+    <ClInclude Include="FFTWrapper.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{bab20c07-c973-4a18-a2aa-0d313a801f6a}</ProjectGuid>
